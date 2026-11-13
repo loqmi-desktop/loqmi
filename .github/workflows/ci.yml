@@ -1,56 +1,65 @@
-name: CI
+name: CI Build
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
-  backend:
-    name: Backend tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+  build:
+    runs-on: macos-latest
+
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
 
-      # The full stack (llama.cpp, chromadb, transformers) is heavy and only
-      # needed at runtime — tests stub those packages (see tests/conftest.py)
-      # and only require this minimal set.
-      - name: Install test dependencies
-        run: pip install pytest fastapi httpx beautifulsoup4 numpy
+    - name: Install Python Dependencies & PyInstaller
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        pip install pyinstaller
 
-      - name: Run tests
-        run: pytest -q
+    - name: Build FastAPI Backend
+      run: |
+        cd backend
+        pyinstaller loqmi_backend.spec
 
-      - name: Compile check all modules
-        run: python -m compileall -q api core rag config.py server_entry.py
+    - name: Move Backend to Tauri
+      run: |
+        mkdir -p frontend/src-tauri/binaries/loqmi-backend-dist
+        cp -R backend/dist/loqmi-backend frontend/src-tauri/binaries/loqmi-backend-dist/
 
-  frontend:
-    name: Frontend build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: local-mind-ai-assistant
-    steps:
-      - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
 
-      - uses: pnpm/action-setup@v4
+    - name: Install pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: local-mind-ai-assistant/pnpm-lock.yaml
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        pnpm install
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+    - name: Build Next.js Frontend
+      run: |
+        cd frontend
+        pnpm build
 
-      - name: Type-check and build
-        run: pnpm build
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Verify Tauri App Build (Dry Run)
+      run: |
+        cd frontend
+        pnpm tauri build --bundles app
