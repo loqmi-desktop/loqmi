@@ -1,0 +1,216 @@
+{
+  "chat": [
+    {
+      "id": "qwen3-8b-q4",
+      "name": "Qwen 3 8B",
+      "filename": "qwen3-8b-instruct-q4_k_m.gguf",
+      "url": "https://huggingface.co/Bunpot/qwen3-8b-instruct/resolve/main/qwen3-8b-instruct-q4_k_m.gguf",
+      "size_gb": 4.8,
+      "n_ctx": 8192,
+      "ram_required": "8GB Unified Memory",
+      "hardware_target": "M1/M2 Base optimal",
+      "description": "The best default daily driver. Extremely fast, highly capable for general conversation and logic.",
+      "recommended": true
+    },
+    {
+      "id": "llama31-8b-q4",
+      "name": "Llama 3.1 8B",
+      "filename": "meta-llama-3.1-8b-instruct-q4_k_m.gguf",
+      "url": "https://huggingface.co/joshnader/Meta-Llama-3.1-8B-Instruct-Q4_K_M-GGUF/resolve/main/meta-llama-3.1-8b-instruct-q4_k_m.gguf",
+      "size_gb": 4.7,
+      "n_ctx": 8192,
+      "ram_required": "8GB Unified Memory",
+      "hardware_target": "M1/M2 Base optimal",
+      "description": "Meta's flagship 8B model. Highly conversational, safe, and robust.",
+      "recommended": false
+    },
+    {
+      "id": "gemma3-9b-q4",
+      "name": "Gemma 3 9B",
+      "filename": "gemma-3-9b-it-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/gemma-3-9b-it-GGUF/resolve/main/gemma-3-9b-it-Q4_K_M.gguf",
+      "size_gb": 5.4,
+      "n_ctx": 8192,
+      "ram_required": "8GB Unified Memory (Tight)",
+      "hardware_target": "M3 Base / 16GB RAM recommended",
+      "description": "Google's open-weights model. Fantastic reasoning, slightly heavier on system resources.",
+      "recommended": false
+    },
+    {
+      "id": "mistral-7b-v3-q4",
+      "name": "Mistral 7B v0.3",
+      "filename": "mistral-7b-instruct-v0.3-q4_k_m.gguf",
+      "url": "https://huggingface.co/jfer1015/Mistral-7B-Instruct-v0.3-Q4_K_M-GGUF/resolve/main/mistral-7b-instruct-v0.3-q4_k_m.gguf",
+      "size_gb": 4.1,
+      "n_ctx": 32768,
+      "ram_required": "8GB Unified Memory",
+      "hardware_target": "M1/M2 Base optimal",
+      "description": "Incredibly efficient and strong on European languages. Great baseline model.",
+      "recommended": false
+    }
+  ],
+  "code": [
+    {
+      "id": "qwen25-coder-7b-q4",
+      "name": "Qwen 2.5 Coder 7B",
+      "filename": "qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+      "size_gb": 4.68,
+      "n_ctx": 2048,
+      "ram_required": "8GB Unified Memory",
+      "hardware_target": "M1/M2 Base optimal",
+      "description": "Exceptional coding capabilities for its size. Matches GPT-4 on many syntax benchmarks.",
+      "recommended": true
+    },
+    {
+      "id": "qwen25-coder-14b-q4",
+      "name": "Qwen 2.5 Coder 14B",
+      "filename": "qwen2.5-coder-14b-instruct-q4_k_m.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct-GGUF/resolve/main/qwen2.5-coder-14b-instruct-q4_k_m.gguf",
+      "size_gb": 8.5,
+      "n_ctx": 8192,
+      "ram_required": "16GB Unified Memory",
+      "hardware_target": "MacBook Pro / M-Series Max required",
+      "description": "High-quality code generation. Requires significant RAM.",
+      "recommended": false
+    },
+    {
+      "id": "deepseek-coder-v2-lite",
+      "name": "DeepSeek-Coder-V2-Lite 16B",
+      "filename": "deepseek-coder-v2-lite-instruct-q4_k_m.gguf",
+      "url": "https://huggingface.co/sugatoray/DeepSeek-Coder-V2-Lite-Instruct-Q4_K_M-GGUF/resolve/main/deepseek-coder-v2-lite-instruct-q4_k_m.gguf",
+      "size_gb": 8.9,
+      "n_ctx": 8192,
+      "ram_required": "16GB Unified Memory",
+      "hardware_target": "MacBook Pro / M-Series Max required",
+      "description": "Advanced architecture. Excellent at multi-file debugging.",
+      "recommended": false
+    },
+    {
+      "id": "codestral-22b-q4",
+      "name": "Codestral 22B",
+      "filename": "Codestral-22B-v0.1-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Codestral-22B-v0.1-GGUF/resolve/main/Codestral-22B-v0.1-Q4_K_M.gguf",
+      "size_gb": 13.2,
+      "n_ctx": 8192,
+      "ram_required": "24GB+ Unified Memory",
+      "hardware_target": "Mac Studio / High-end Mac required",
+      "description": "Autocomplete focused, incredibly powerful, but very heavy.",
+      "recommended": false
+    }
+  ],
+  "reasoning": [
+    {
+      "id": "deepseek-r1-7b-q4",
+      "name": "DeepSeek-R1 Distilled 7B",
+      "filename": "DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-7B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf",
+      "size_gb": 4.7,
+      "n_ctx": 8192,
+      "ram_required": "8GB Unified Memory",
+      "hardware_target": "M1/M2 Base optimal",
+      "description": "Distilled reasoning model. Thinks step-by-step before answering. Incredible logic.",
+      "recommended": true
+    },
+    {
+      "id": "deepseek-r1-14b-q4",
+      "name": "DeepSeek-R1 Distilled 14B",
+      "filename": "DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-14B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf",
+      "size_gb": 8.9,
+      "n_ctx": 8192,
+      "ram_required": "16GB Unified Memory",
+      "hardware_target": "MacBook Pro required",
+      "description": "Unmatched local reasoning capabilities. Extremely accurate for math and logic.",
+      "recommended": false
+    },
+    {
+      "id": "phi4-14b-q4",
+      "name": "Phi-4 14B",
+      "filename": "phi-4-q4_k_m.gguf",
+      "url": "https://huggingface.co/cdeater/phi-4-Q4_K_M-GGUF/resolve/main/phi-4-q4_k_m.gguf",
+      "size_gb": 9.1,
+      "n_ctx": 4096,
+      "ram_required": "16GB Unified Memory",
+      "hardware_target": "MacBook Pro required",
+      "description": "Microsoft's heavy reasoning model. Dense knowledge base.",
+      "recommended": false
+    }
+  ],
+  "document": [
+    {
+      "id": "qwen3-8b-ctx-q4",
+      "name": "Qwen 3 8B (Long Context)",
+      "filename": "qwen3-8b-instruct-q4_k_m.gguf",
+      "url": "https://huggingface.co/Bunpot/qwen3-8b-instruct/resolve/main/qwen3-8b-instruct-q4_k_m.gguf",
+      "size_gb": 4.8,
+      "n_ctx": 32768,
+      "ram_required": "8GB Unified Memory",
+      "hardware_target": "M1/M2 Base optimal",
+      "description": "Configured for a massive context window. Ideal for reading entire PDFs via RAG.",
+      "recommended": true
+    }
+  ],
+  "helper": [
+    {
+      "id": "qwen3-4b-instruct-2507-q4",
+      "name": "Qwen 3 4B Instruct 2507 (Search Helper)",
+      "filename": "Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "size_gb": 2.5,
+      "n_ctx": 4096,
+      "ram_required": "~4GB free alongside your main model",
+      "hardware_target": "Apple Silicon, 16GB recommended",
+      "description": "Small non-thinking model that plans searches and writes research notes while your main model stays loaded.",
+      "recommended": true
+    },
+    {
+      "id": "llama-3.2-3b-instruct-q4",
+      "name": "Llama 3.2 3B Instruct",
+      "filename": "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "size_gb": 1.9,
+      "n_ctx": 131072,
+      "ram_required": "4GB to 8GB Unified Memory",
+      "hardware_target": "Mac M1/M2/M3 or standard 8GB RAM PC",
+      "description": "Meta's gold standard reasoning engine for small parameters. Perfect for tool-calling and edge devices.",
+      "recommended": true
+    },
+    {
+      "id": "hermes-3-llama-3.2-3b-q4",
+      "name": "Hermes 3 - 3B",
+      "filename": "Hermes-3-Llama-3.2-3B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Hermes-3-Llama-3.2-3B-GGUF/resolve/main/Hermes-3-Llama-3.2-3B-Q4_K_M.gguf",
+      "size_gb": 2.0,
+      "n_ctx": 131072,
+      "ram_required": "4GB to 8GB Unified Memory",
+      "hardware_target": "Mac M1/M2/M3 or standard 8GB RAM PC",
+      "description": "Instruction-tuned specifically on structured output and function calling. Highly reliable for JSON generation.",
+      "recommended": true
+    },
+    {
+      "id": "qwen2.5-3b-instruct-q4",
+      "name": "Qwen 2.5 3B Instruct",
+      "filename": "Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Qwen2.5-3B-Instruct-GGUF/resolve/main/Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+      "size_gb": 1.9,
+      "n_ctx": 32768,
+      "ram_required": "4GB Unified Memory",
+      "hardware_target": "Low-resource Edge or Desktop",
+      "description": "Consistently ranks high in coding and reasoning tasks. Excellent native tool-calling capabilities.",
+      "recommended": true
+    },
+    {
+      "id": "granite-3.1-3b-instruct-q4",
+      "name": "Granite 3.1 3B Instruct",
+      "filename": "granite-3.1-3b-a800m-instruct-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/granite-3.1-3b-a800m-instruct-GGUF/resolve/main/granite-3.1-3b-a800m-instruct-Q4_K_M.gguf",
+      "size_gb": 2.0,
+      "n_ctx": 128000,
+      "ram_required": "4GB Unified Memory",
+      "hardware_target": "Enterprise and Agentic Workflows",
+      "description": "Designed by IBM strictly for enterprise RAG and tool orchestration out of the box.",
+      "recommended": false
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+# ==========================================
+# 🤖 AI Models, Weights, & Databases (Backend)
+# ==========================================
+*.gguf
+*.onnx
+*.onnx.bak
+*.onnx.data
+backend/core/classifier_model/
+backend/data/
+backend/models/
+backend/chroma_db/
+backend/sentence_transformers/
+backend/chats.db
+backend/logs/
+
+# ==========================================
+# 🐍 Python / FastAPI (Backend)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+backend/build/
+backend/dist/
+backend/*.spec
+
+# ==========================================
+# ⚛️ Node.js / Next.js (Frontend)
+# ==========================================
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ==========================================
+# 🦀 Tauri Build Output (Frontend)
+# ==========================================
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+frontend/src-tauri/binaries/
+*.pkg
+*.dmg
+
+# ==========================================
+# 🔐 Environment Variables & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# 💻 OS & IDEs
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

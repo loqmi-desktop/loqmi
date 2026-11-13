@@ -1,0 +1,42 @@
+# loqmi backend dependencies
+# Install with: pip install -r requirements.txt
+#
+# llama-cpp-python is installed separately because it needs platform-specific
+# compilation flags (e.g. Metal on Apple Silicon):
+#   CMAKE_ARGS="-DGGML_METAL=on" pip install llama-cpp-python --no-cache-dir
+
+# API
+fastapi
+uvicorn[standard]
+python-multipart           # form data / file uploads in FastAPI
+
+# Inference
+llama-cpp-python
+
+# Classifier
+transformers
+optimum[onnxruntime]
+onnxruntime
+
+# RAG
+langchain
+langchain-community
+langchain-huggingface
+langchain-chroma
+langchain-text-splitters
+chromadb
+sentence-transformers
+pypdf
+
+# Utilities
+httpx                     # async HTTP for model downloader + web search
+tqdm                      # progress bars in CLI scripts
+
+pytesseract
+Pillow
+psutil
+
+ddgs
+trafilatura
+beautifulsoup4
+lxml

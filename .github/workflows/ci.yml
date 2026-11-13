@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # The full stack (llama.cpp, chromadb, transformers) is heavy and only
+      # needed at runtime — tests stub those packages (see tests/conftest.py)
+      # and only require this minimal set.
+      - name: Install test dependencies
+        run: pip install pytest fastapi httpx beautifulsoup4 numpy
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Compile check all modules
+        run: python -m compileall -q api core rag config.py server_entry.py
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: local-mind-ai-assistant
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: local-mind-ai-assistant/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check and build
+        run: pnpm build
