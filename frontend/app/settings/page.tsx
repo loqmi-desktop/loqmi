@@ -25,17 +25,12 @@ import {
   BrainCircuit,
   Globe,
   SlidersHorizontal,
-  Search
+  Search,
 } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 
 // Routable categories (classifier labels, context windows, Hugging Face assignment)
-const CATEGORIES = [
-  "chat",
-  "code",
-  "reasoning",
-  "document",
-] as const;
+const CATEGORIES = ["chat", "code", "reasoning", "document"] as const;
 type Category = (typeof CATEGORIES)[number];
 
 // Everything that has downloadable models. "helper" is NOT a routing category.
@@ -59,7 +54,8 @@ const toModelMap = (status: SetupStatus) => {
   return out;
 };
 
-const formatTokens = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
+const formatTokens = (n: number) =>
+  n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
 
 export default function SettingsPage() {
   const { isConnected } = useConnection();
@@ -79,7 +75,9 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"library" | "catalog">("library");
 
   // Catalog Sub-tabs & Hugging Face State
-  const [catalogView, setCatalogView] = useState<"suggested" | "huggingface">("suggested");
+  const [catalogView, setCatalogView] = useState<"suggested" | "huggingface">(
+    "suggested",
+  );
   const [suggestedModels, setSuggestedModels] = useState<SuggestedModel[]>([]);
 
   // HF Search State
@@ -88,13 +86,19 @@ export default function SettingsPage() {
   const [hfResults, setHfResults] = useState<HuggingFaceRepo[]>([]);
 
   // HF Download Flow State
-  const [hfSelectedRepo, setHfSelectedRepo] = useState<HuggingFaceRepo | null>(null);
+  const [hfSelectedRepo, setHfSelectedRepo] = useState<HuggingFaceRepo | null>(
+    null,
+  );
   const [hfFiles, setHfFiles] = useState<string[]>([]);
   const [hfSelectedFile, setHfSelectedFile] = useState<string>("");
-  const [hfOverrideCategory, setHfOverrideCategory] = useState<Category | "auto">("auto");
+  const [hfOverrideCategory, setHfOverrideCategory] = useState<
+    Category | "auto"
+  >("auto");
 
   // Downloading & Deleting State
-  const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
+  const [downloadProgress, setDownloadProgress] = useState<
+    Record<string, number>
+  >({});
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Token State
@@ -113,25 +117,34 @@ export default function SettingsPage() {
   const [isSavingTavilyKey, setIsSavingTavilyKey] = useState(false);
 
   // Context Window State (routable categories only; the search helper has a fixed window)
-  const [contextWindows, setContextWindows] = useState<Record<Category, CategoryContextInfo | null>>({
+  const [contextWindows, setContextWindows] = useState<
+    Record<Category, CategoryContextInfo | null>
+  >({
     chat: null,
     code: null,
     reasoning: null,
     document: null,
   });
-  const [savingContextWindow, setSavingContextWindow] = useState<Category | null>(null);
+  const [savingContextWindow, setSavingContextWindow] =
+    useState<Category | null>(null);
 
   // ── INIT ────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchData = async () => {
       try {
         setError(null);
-        const [statusData, tokenData, searchKeysData, contextWindowData, catalogData] = await Promise.all([
+        const [
+          statusData,
+          tokenData,
+          searchKeysData,
+          contextWindowData,
+          catalogData,
+        ] = await Promise.all([
           setupAPI.getStatus(),
           setupAPI.getToken(),
           setupAPI.getSearchKeys(),
           contextWindowAPI.getAll(),
-          setupAPI.getSuggestedModels().catch(() => []) // Fallback to empty if not fetched yet
+          setupAPI.getSuggestedModels().catch(() => []), // Fallback to empty if not fetched yet
         ]);
 
         setModels(toModelMap(statusData));
@@ -165,7 +178,11 @@ export default function SettingsPage() {
         });
         setContextWindows(cwMap);
       } catch (err) {
-        setError(err instanceof BackendError ? err.message : "Failed to load settings data.");
+        setError(
+          err instanceof BackendError
+            ? err.message
+            : "Failed to load settings data.",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -173,6 +190,19 @@ export default function SettingsPage() {
 
     if (isConnected) fetchData();
   }, [isConnected]);
+
+  const anyDownloading = MODEL_CATEGORIES.some((c) =>
+    models[c].some((m) => m.downloading),
+  );
+  useEffect(() => {
+    if (!anyDownloading) return;
+    const t = setInterval(async () => {
+      try {
+        setModels(toModelMap(await setupAPI.getStatus()));
+      } catch {}
+    }, 3000);
+    return () => clearInterval(t);
+  }, [anyDownloading]);
 
   // ── HANDLERS ────────────────────────────────────────────────────
   const handleSaveToken = async () => {
@@ -217,7 +247,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleActivateModel = async (category: ModelCategory, modelId: string) => {
+  const handleActivateModel = async (
+    category: ModelCategory,
+    modelId: string,
+  ) => {
     try {
       setError(null);
       await setupAPI.selectModel(category, modelId);
@@ -229,11 +262,16 @@ export default function SettingsPage() {
         })),
       }));
     } catch (err) {
-      setError(err instanceof BackendError ? err.message : "Failed to activate model");
+      setError(
+        err instanceof BackendError ? err.message : "Failed to activate model",
+      );
     }
   };
 
-  const handleDeleteModel = async (category: ModelCategory, modelId: string) => {
+  const handleDeleteModel = async (
+    category: ModelCategory,
+    modelId: string,
+  ) => {
     if (!confirm("Delete this model? This action cannot be undone.")) return;
     try {
       setError(null);
@@ -243,7 +281,9 @@ export default function SettingsPage() {
       const statusData = await setupAPI.getStatus();
       setModels(toModelMap(statusData));
     } catch (err) {
-      setError(err instanceof BackendError ? err.message : "Failed to delete model");
+      setError(
+        err instanceof BackendError ? err.message : "Failed to delete model",
+      );
     } finally {
       setProcessingId(null);
     }
@@ -254,15 +294,23 @@ export default function SettingsPage() {
       setError(null);
       setDownloadProgress((prev) => ({ ...prev, [modelId]: 0 }));
 
+      let finished = false;
       for await (const event of setupAPI.downloadModel(category, modelId)) {
         if (event.type === "progress") {
           setDownloadProgress((prev) => ({
             ...prev,
             [modelId]: event.percent,
           }));
+        } else if (event.type === "done") {
+          finished = true;
         } else if (event.type === "error") {
           throw new Error(event.message);
         }
+      }
+      if (!finished) {
+        throw new Error(
+          "The download was interrupted. Click Download again to resume where it stopped.",
+        );
       }
 
       const statusData = await setupAPI.getStatus();
@@ -285,7 +333,9 @@ export default function SettingsPage() {
       setSuggestedModels(await setupAPI.getSuggestedModels());
       setModels(toModelMap(await setupAPI.getStatus()));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to refresh catalog.");
+      setError(
+        err instanceof Error ? err.message : "Failed to refresh catalog.",
+      );
     }
   };
 
@@ -296,14 +346,20 @@ export default function SettingsPage() {
 
     setContextWindows((prev) => ({
       ...prev,
-      [category]: prev[category] ? { ...prev[category]!, current: value } : prev[category],
+      [category]: prev[category]
+        ? { ...prev[category]!, current: value }
+        : prev[category],
     }));
 
     try {
       await contextWindowAPI.setValue(category, value);
     } catch (err) {
       setContextWindows((prev) => ({ ...prev, [category]: previous }));
-      setError(err instanceof BackendError ? err.message : "Failed to update context window");
+      setError(
+        err instanceof BackendError
+          ? err.message
+          : "Failed to update context window",
+      );
     } finally {
       setSavingContextWindow(null);
     }
@@ -320,7 +376,9 @@ export default function SettingsPage() {
       const results = await setupAPI.searchHuggingFace(hfQuery);
       setHfResults(results);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to search Hugging Face.");
+      setError(
+        err instanceof Error ? err.message : "Failed to search Hugging Face.",
+      );
     } finally {
       setHfIsSearching(false);
     }
@@ -344,8 +402,14 @@ export default function SettingsPage() {
     let targetCategory = hfOverrideCategory;
     if (targetCategory === "auto") {
       const searchString = hfSelectedRepo.repo_id.toLowerCase();
-      if (searchString.includes("code") || searchString.includes("coder")) targetCategory = "code";
-      else if (searchString.includes("reason") || searchString.includes("think") || searchString.includes("r1")) targetCategory = "reasoning";
+      if (searchString.includes("code") || searchString.includes("coder"))
+        targetCategory = "code";
+      else if (
+        searchString.includes("reason") ||
+        searchString.includes("think") ||
+        searchString.includes("r1")
+      )
+        targetCategory = "reasoning";
       else targetCategory = "chat";
     }
 
@@ -372,12 +436,26 @@ export default function SettingsPage() {
 
   const activeHelper = models.helper.find((m) => m.downloaded && m.is_active);
   const installedIds = new Set(
-    MODEL_CATEGORIES.flatMap((c) => models[c].filter((m) => m.downloaded).map((m) => m.id)),
+    MODEL_CATEGORIES.flatMap((c) =>
+      models[c].filter((m) => m.downloaded).map((m) => m.id),
+    ),
   );
+
+  const serverProgress: Record<string, number> = {};
+  MODEL_CATEGORIES.forEach((c) =>
+    models[c].forEach((m) => {
+      if (m.downloading) serverProgress[m.id] = m.progress_percent ?? 0;
+    }),
+  );
+  const progressFor = (id: string) =>
+    downloadProgress[id] ?? serverProgress[id];
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
       <div className="flex-1 overflow-y-auto pb-20">
         <div className="max-w-5xl mx-auto p-8">
           {error && (
@@ -387,9 +465,12 @@ export default function SettingsPage() {
           )}
 
           <div className="mb-10">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Settings & Models</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Settings & Models
+            </h1>
             <p className="text-muted-foreground text-sm">
-              Manage your local AI environment. Download specialized models and configure active defaults.
+              Manage your local AI environment. Download specialized models and
+              configure active defaults.
             </p>
           </div>
 
@@ -400,9 +481,12 @@ export default function SettingsPage() {
                 <Key className="h-5 w-5 text-foreground" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground">Hugging Face API Token</h3>
+                <h3 className="font-semibold text-foreground">
+                  Hugging Face API Token
+                </h3>
                 <p className="text-xs text-muted-foreground mt-1 mb-4">
-                  Required for faster download speeds and accessing gated models. Your token is stored securely in your local database.
+                  Required for faster download speeds and accessing gated
+                  models. Your token is stored securely in your local database.
                 </p>
                 <div className="flex gap-3 max-w-md">
                   <input
@@ -420,7 +504,11 @@ export default function SettingsPage() {
                     disabled={isSavingToken || !hfToken.trim()}
                     className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
                   >
-                    {isSavingToken ? "Saving..." : hasSavedToken ? "Update" : "Save"}
+                    {isSavingToken
+                      ? "Saving..."
+                      : hasSavedToken
+                        ? "Update"
+                        : "Save"}
                   </button>
                 </div>
                 {hasSavedToken && (
@@ -439,19 +527,27 @@ export default function SettingsPage() {
                 <Globe className="h-5 w-5 text-foreground" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground">Internet Search API Keys</h3>
+                <h3 className="font-semibold text-foreground">
+                  Internet Search API Keys
+                </h3>
                 <p className="text-xs text-muted-foreground mt-1 mb-4">
-                  Optional. Without a key, internet search falls back to free DuckDuckGo/SearXNG search. Adding a key unlocks that provider as a more reliable option.
+                  Optional. Without a key, internet search falls back to free
+                  DuckDuckGo/SearXNG search. Adding a key unlocks that provider
+                  as a more reliable option.
                 </p>
                 <p className="text-xs text-muted-foreground mb-4">
-                  <span className="font-medium text-foreground">Search helper: </span>
+                  <span className="font-medium text-foreground">
+                    Search helper:{" "}
+                  </span>
                   {activeHelper
                     ? activeHelper.name
                     : "none installed. Your chat model will do the research (download one from the Model Catalog)."}
                 </p>
 
                 <div className="mb-5">
-                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Brave Search API Key</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                    Brave Search API Key
+                  </label>
                   <div className="flex gap-3 max-w-md">
                     <input
                       type="password"
@@ -468,7 +564,11 @@ export default function SettingsPage() {
                       disabled={isSavingBraveKey || !braveKey.trim()}
                       className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
                     >
-                      {isSavingBraveKey ? "Saving..." : hasSavedBraveKey ? "Update" : "Save"}
+                      {isSavingBraveKey
+                        ? "Saving..."
+                        : hasSavedBraveKey
+                          ? "Update"
+                          : "Save"}
                     </button>
                   </div>
                   {hasSavedBraveKey && (
@@ -479,7 +579,9 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Tavily API Key</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                    Tavily API Key
+                  </label>
                   <div className="flex gap-3 max-w-md">
                     <input
                       type="password"
@@ -496,7 +598,11 @@ export default function SettingsPage() {
                       disabled={isSavingTavilyKey || !tavilyKey.trim()}
                       className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
                     >
-                      {isSavingTavilyKey ? "Saving..." : hasSavedTavilyKey ? "Update" : "Save"}
+                      {isSavingTavilyKey
+                        ? "Saving..."
+                        : hasSavedTavilyKey
+                          ? "Update"
+                          : "Save"}
                     </button>
                   </div>
                   {hasSavedTavilyKey && (
@@ -516,9 +622,12 @@ export default function SettingsPage() {
                 <SlidersHorizontal className="h-5 w-5 text-foreground" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground">Context Window</h3>
+                <h3 className="font-semibold text-foreground">
+                  Context Window
+                </h3>
                 <p className="text-xs text-muted-foreground mt-1 mb-4">
-                  How much conversation history each model category can hold at once. Larger windows use more memory and take longer to load.
+                  How much conversation history each model category can hold at
+                  once. Larger windows use more memory and take longer to load.
                 </p>
 
                 <div className="divide-y divide-border/50">
@@ -528,25 +637,42 @@ export default function SettingsPage() {
                     const isSaving = savingContextWindow === category;
 
                     return (
-                      <div key={category} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3 first:pt-0 last:pb-0">
+                      <div
+                        key={category}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3 first:pt-0 last:pb-0"
+                      >
                         <div>
-                          <p className="text-sm font-medium text-foreground capitalize">{category}</p>
+                          <p className="text-sm font-medium text-foreground capitalize">
+                            {category}
+                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {info.model_name} · supports up to {formatTokens(info.ceiling)} tokens
+                            {info.model_name} · supports up to{" "}
+                            {formatTokens(info.ceiling)} tokens
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          {isSaving && <span className="text-xs text-muted-foreground">Saving...</span>}
+                          {isSaving && (
+                            <span className="text-xs text-muted-foreground">
+                              Saving...
+                            </span>
+                          )}
                           <select
                             value={info.current}
                             disabled={isSaving}
-                            onChange={(e) => handleSetContextWindow(category, Number(e.target.value))}
+                            onChange={(e) =>
+                              handleSetContextWindow(
+                                category,
+                                Number(e.target.value),
+                              )
+                            }
                             className="px-3 py-1.5 bg-background border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-primary disabled:opacity-50 min-w-[140px]"
                           >
                             {info.options.map((opt) => (
                               <option key={opt} value={opt}>
                                 {formatTokens(opt)}
-                                {opt === info.recommended ? " (Recommended)" : ""}
+                                {opt === info.recommended
+                                  ? " (Recommended)"
+                                  : ""}
                               </option>
                             ))}
                           </select>
@@ -598,37 +724,59 @@ export default function SettingsPage() {
                       </h3>
                       {category === "helper" && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Optional. Plans and summarises web searches in parallel so your main model stays loaded.
-                          If none is installed, the chat model does this job.
+                          Optional. Plans and summarises web searches in
+                          parallel so your main model stays loaded. If none is
+                          installed, the chat model does this job.
                         </p>
                       )}
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
                       {catModels.map((model) => (
-                        <div key={model.id} className="flex flex-col md:flex-row md:items-start gap-4 p-5 border border-border rounded-lg bg-card hover:border-border/80 transition-colors">
+                        <div
+                          key={model.id}
+                          className="flex flex-col md:flex-row md:items-start gap-4 p-5 border border-border rounded-lg bg-card hover:border-border/80 transition-colors"
+                        >
                           <div className="pt-1">
                             <input
                               type="radio"
                               name={`active-${category}`}
                               checked={model.is_active}
-                              onChange={() => handleActivateModel(category, model.id)}
+                              onChange={() =>
+                                handleActivateModel(category, model.id)
+                              }
                               className="h-4 w-4 accent-primary cursor-pointer"
                             />
                           </div>
 
                           <div className="flex-1 space-y-3">
                             <div className="flex items-center gap-3">
-                              <h4 className="font-semibold text-base text-foreground">{model.name}</h4>
-                              {model.recommended && <StatusBadge text="Recommended" variant="active" />}
-                              {model.is_active && <StatusBadge text="Active Default" variant="success" />}
+                              <h4 className="font-semibold text-base text-foreground">
+                                {model.name}
+                              </h4>
+                              {model.recommended && (
+                                <StatusBadge
+                                  text="Recommended"
+                                  variant="active"
+                                />
+                              )}
+                              {model.is_active && (
+                                <StatusBadge
+                                  text="Active Default"
+                                  variant="success"
+                                />
+                              )}
                             </div>
-                            <p className="text-sm text-muted-foreground">{model.description || "No description provided."}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {model.description || "No description provided."}
+                            </p>
                           </div>
 
                           <div className="flex flex-col items-end justify-center min-w-[120px]">
                             <button
-                              onClick={() => handleDeleteModel(category, model.id)}
+                              onClick={() =>
+                                handleDeleteModel(category, model.id)
+                              }
                               disabled={processingId === model.id}
                               className="p-2 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50 mt-1"
                               title="Delete from disk"
@@ -645,7 +793,6 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="space-y-6">
-
               {/* Sub-tab Toggle */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
@@ -675,48 +822,72 @@ export default function SettingsPage() {
               {catalogView === "suggested" && (
                 <div className="grid grid-cols-1 gap-4">
                   {suggestedModels.map((model) => (
-                    <div key={model.id} className="flex flex-col md:flex-row gap-4 p-5 border border-border rounded-lg bg-card">
-                       <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-semibold text-foreground">{model.name}</h4>
-                            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{model.category}</span>
-                            {model.recommended && <StatusBadge text="Recommended" variant="active" />}
+                    <div
+                      key={model.id}
+                      className="flex flex-col md:flex-row gap-4 p-5 border border-border rounded-lg bg-card"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold text-foreground">
+                            {model.name}
+                          </h4>
+                          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                            {model.category}
+                          </span>
+                          {model.recommended && (
+                            <StatusBadge text="Recommended" variant="active" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {model.description}
+                        </p>
+                        <div className="flex flex-wrap gap-4 pt-2">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <HardDrive className="h-3.5 w-3.5" />
+                            <span>{model.size_gb} GB</span>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-3">{model.description}</p>
-                          <div className="flex flex-wrap gap-4 pt-2">
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <HardDrive className="h-3.5 w-3.5" />
-                              <span>{model.size_gb} GB</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <Cpu className="h-3.5 w-3.5" />
-                              <span>{model.ram_required || "Unknown RAM"}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <BrainCircuit className="h-3.5 w-3.5" />
-                              <span>{model.n_ctx ? `${(model.n_ctx / 1000).toFixed(0)}k Context` : "Unknown Context"}</span>
-                            </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Cpu className="h-3.5 w-3.5" />
+                            <span>{model.ram_required || "Unknown RAM"}</span>
                           </div>
-                       </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <BrainCircuit className="h-3.5 w-3.5" />
+                            <span>
+                              {model.n_ctx
+                                ? `${(model.n_ctx / 1000).toFixed(0)}k Context`
+                                : "Unknown Context"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
 
-                       <div className="flex items-center justify-end min-w-[120px]">
-                         {installedIds.has(model.id) ? (
-                           <span className="text-xs text-green-500 flex items-center gap-1">
-                             <CheckCircle2 className="h-3.5 w-3.5" /> Installed
-                           </span>
-                         ) : downloadProgress[model.id] !== undefined ? (
-                           <div className="w-full max-w-[150px]">
-                              <ProgressBar value={downloadProgress[model.id]} label="Downloading..." showPercent />
-                           </div>
-                         ) : (
-                           <button
-                             onClick={() => handleDownload(model.category as ModelCategory, model.id)}
-                             className="px-4 py-2 bg-secondary text-foreground hover:bg-secondary/80 text-sm font-medium rounded-md transition-colors flex items-center gap-2"
-                           >
-                             <Download className="h-4 w-4" /> Download
-                           </button>
-                         )}
-                       </div>
+                      <div className="flex items-center justify-end min-w-[120px]">
+                        {installedIds.has(model.id) ? (
+                          <span className="text-xs text-green-500 flex items-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Installed
+                          </span>
+                        ) : progressFor(model.id) !== undefined ? (
+                          <div className="w-full max-w-[150px]">
+                            <ProgressBar
+                              value={progressFor(model.id)}
+                              label="Downloading..."
+                              showPercent
+                            />
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleDownload(
+                                model.category as ModelCategory,
+                                model.id,
+                              )
+                            }
+                            className="px-4 py-2 bg-secondary text-foreground hover:bg-secondary/80 text-sm font-medium rounded-md transition-colors flex items-center gap-2"
+                          >
+                            <Download className="h-4 w-4" /> Download
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -732,7 +903,11 @@ export default function SettingsPage() {
                       placeholder="Search for models (e.g., Llama 3 8B GGUF)"
                       className="flex-1 px-4 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary"
                     />
-                    <button type="submit" disabled={hfIsSearching} className="px-6 py-2 bg-primary text-primary-foreground rounded-md flex items-center gap-2">
+                    <button
+                      type="submit"
+                      disabled={hfIsSearching}
+                      className="px-6 py-2 bg-primary text-primary-foreground rounded-md flex items-center gap-2"
+                    >
                       <Search className="h-4 w-4" />
                       {hfIsSearching ? "Searching..." : "Search Hub"}
                     </button>
@@ -742,9 +917,17 @@ export default function SettingsPage() {
                   {!hfSelectedRepo ? (
                     <div className="grid grid-cols-1 gap-3">
                       {hfResults.map((repo) => (
-                        <div key={repo.repo_id} onClick={() => handleSelectHfRepo(repo)} className="p-4 border border-border rounded-lg cursor-pointer hover:border-primary/50 bg-card transition-colors">
-                          <h4 className="font-medium text-foreground">{repo.repo_id}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">{repo.downloads.toLocaleString()} downloads</p>
+                        <div
+                          key={repo.repo_id}
+                          onClick={() => handleSelectHfRepo(repo)}
+                          className="p-4 border border-border rounded-lg cursor-pointer hover:border-primary/50 bg-card transition-colors"
+                        >
+                          <h4 className="font-medium text-foreground">
+                            {repo.repo_id}
+                          </h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {repo.downloads.toLocaleString()} downloads
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -753,45 +936,84 @@ export default function SettingsPage() {
                     <div className="p-6 border border-border bg-card rounded-lg space-y-5">
                       <div className="flex justify-between items-start border-b border-border pb-4">
                         <div>
-                          <h4 className="font-semibold text-lg text-foreground">{hfSelectedRepo.repo_id}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">Configure your download for this custom model.</p>
+                          <h4 className="font-semibold text-lg text-foreground">
+                            {hfSelectedRepo.repo_id}
+                          </h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Configure your download for this custom model.
+                          </p>
                         </div>
-                        <button onClick={() => setHfSelectedRepo(null)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
+                        <button
+                          onClick={() => setHfSelectedRepo(null)}
+                          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          Cancel
+                        </button>
                       </div>
 
                       <div className="space-y-4">
                         <div>
-                          <label className="text-sm font-medium mb-1.5 block text-foreground">1. Select Quantization File</label>
+                          <label className="text-sm font-medium mb-1.5 block text-foreground">
+                            1. Select Quantization File
+                          </label>
                           <select
                             value={hfSelectedFile}
                             onChange={(e) => setHfSelectedFile(e.target.value)}
                             className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-primary"
                           >
-                            {hfFiles.length === 0 ? <option>Loading files...</option> : null}
-                            {hfFiles.map(f => <option key={f} value={f}>{f}</option>)}
+                            {hfFiles.length === 0 ? (
+                              <option>Loading files...</option>
+                            ) : null}
+                            {hfFiles.map((f) => (
+                              <option key={f} value={f}>
+                                {f}
+                              </option>
+                            ))}
                           </select>
-                          <p className="text-xs text-muted-foreground mt-1">Select the specific .gguf file. Q4_K_M is generally recommended for balance.</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Select the specific .gguf file. Q4_K_M is generally
+                            recommended for balance.
+                          </p>
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium mb-1.5 block text-foreground">2. Assign Category</label>
+                          <label className="text-sm font-medium mb-1.5 block text-foreground">
+                            2. Assign Category
+                          </label>
                           <select
                             value={hfOverrideCategory}
-                            onChange={(e) => setHfOverrideCategory(e.target.value as Category | "auto")}
+                            onChange={(e) =>
+                              setHfOverrideCategory(
+                                e.target.value as Category | "auto",
+                              )
+                            }
                             className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-primary"
                           >
                             <option value="auto">Auto-detect from name</option>
-                            {CATEGORIES.map(c => <option key={c} value={c} className="capitalize">{c}</option>)}
+                            {CATEGORIES.map((c) => (
+                              <option key={c} value={c} className="capitalize">
+                                {c}
+                              </option>
+                            ))}
                           </select>
-                          <p className="text-xs text-muted-foreground mt-1">loqmi routes prompts based on this category.</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            loqmi routes prompts based on this category.
+                          </p>
                         </div>
                       </div>
 
                       <div className="pt-2">
-                        {downloadProgress[hfSelectedRepo.repo_id] !== undefined ? (
-                           <ProgressBar value={downloadProgress[hfSelectedRepo.repo_id]} label="Downloading custom model..." showPercent />
+                        {progressFor(hfSelectedRepo.repo_id) !== undefined ? (
+                          <ProgressBar
+                            value={progressFor(hfSelectedRepo.repo_id)!}
+                            label="Downloading custom model..."
+                            showPercent
+                          />
                         ) : (
-                          <button onClick={handleDownloadHfModel} className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                          <button
+                            onClick={handleDownloadHfModel}
+                            className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                          >
                             <Download className="h-4 w-4" />
                             Download Custom Model
                           </button>

@@ -14,7 +14,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from core import memory, model_manager
+from core import memory, model_manager, ocr_support
 from api.routes import (
     chats,
     documents,
@@ -53,11 +53,17 @@ def _flatten_catalog(catalog_data) -> list[dict]:
 async def lifespan(app: FastAPI):
     # 1. Startup — initialise DB
     memory.init_db()
+    ocr_support.configure()
 
     # 2. Auto-seed catalog if empty
     if not memory.get_suggested_models():
         logger.info("Catalog is empty. Auto-seeding initial models...")
-        catalog_path = Path(__file__).resolve().parents[2] / "model" / "model.json"
+        
+        # Use BUNDLE_DIR from config if frozen, otherwise fallback to source path
+        from config import BUNDLE_DIR
+        catalog_path = BUNDLE_DIR / "model" / "model.json"
+        if not catalog_path.exists():
+            catalog_path = Path(__file__).resolve().parents[2] / "model" / "model.json"
 
         try:
             if catalog_path.exists():
@@ -68,8 +74,7 @@ async def lifespan(app: FastAPI):
             else:
                 logger.warning(
                     "Seed file not found at %s. The catalog stays empty until "
-                    "POST /setup/refresh-catalog succeeds. (In a PyInstaller build, "
-                    "make sure model/model.json is listed in the spec's datas.)",
+                    "POST /setup/refresh-catalog succeeds.",
                     catalog_path,
                 )
         except Exception as e:
@@ -100,6 +105,7 @@ app.add_middleware(
         "https://tauri.localhost",
         "http://localhost:1420",
         "http://localhost:3000",
+        "http://tauri.localhost",
     ],
     allow_methods=["*"],
     allow_headers=["*"],

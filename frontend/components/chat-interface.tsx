@@ -111,6 +111,7 @@ export function ChatInterface({ initialChatId }: ChatInterfaceProps) {
     docs: ChatDocument[] = [],
   ) => {
     if (!initialChatId || (!content.trim() && files.length === 0 && docs.length === 0)) return;
+    let messagesAdded = false;
 
     try {
       setError(null);
@@ -188,6 +189,7 @@ export function ChatInterface({ initialChatId }: ChatInterfaceProps) {
           created_at: new Date().toISOString(),
         },
       ]);
+      messagesAdded = true;
 
       for await (const event of chatAPI.sendMessage(
         initialChatId,
@@ -256,7 +258,9 @@ export function ChatInterface({ initialChatId }: ChatInterfaceProps) {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send message");
-      setMessages((prev) => prev.slice(0, -2));
+      if (messagesAdded) {
+        setMessages((prev) => prev.slice(0, -2));
+      }
     } finally {
       setIsSending(false);
     }

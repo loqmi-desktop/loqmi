@@ -37,6 +37,25 @@ def _stabilize(category: str, confidence: float, prompt: str, chat_id: str) -> t
 
     return category, None
 
+def _guard_category(category: str, prompt: str, persist_content: str,
+                    chat_id: str, last: str | None) -> tuple[str, str | None]:
+    """
+    Rule-based sanity checks on top of the classifier:
+    - 'document' needs a document in play (attached file, RAG on, or an earlier document turn).
+    - a very short opening message ("hello", "thanks") has no signal; use chat.
+    """
+    if category == "document":
+        has_file_block = any(
+            b.get("label") == "file" for b in memory.parse_content_blocks(persist_content)
+        )
+        if not (has_file_block or memory.get_rag_enabled(chat_id) or last == "document"):
+            return "chat", "no document in play"
+
+    if last is None and len(prompt.split()) <= 2 and category != "chat":
+        return "chat", "too short to classify"
+
+    return category, None
+
 
 def handle(prompt: str, persist_content: str, chat_id: str, override_category: str | None = None):
     """
@@ -57,7 +76,10 @@ def handle(prompt: str, persist_content: str, chat_id: str, override_category: s
     else:
         raw_category, confidence = classifier.classify_with_confidence(prompt)
         classify_ms = round((time.time() - t0) * 1000, 1)
+        last = memory.get_last_category(chat_id)
         category, reason = _stabilize(raw_category, confidence, prompt, chat_id)
+        category, guard_reason = _guard_category(category, prompt, persist_content, chat_id, last)
+        reason = guard_reason or reason
         logger.info(
             "Classified '%s' (conf=%.2f, %sms) -> using '%s'%s",
             raw_category, confidence, classify_ms, category,

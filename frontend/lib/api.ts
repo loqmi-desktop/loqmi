@@ -226,6 +226,8 @@ export type ModelInfo = {
   recommended: boolean
   is_active: boolean
   shared_with?: string
+  downloading?: boolean
+  progress_percent?: number | null
 }
 
 export type SetupStatus = {
@@ -243,6 +245,13 @@ export type SetupStatus = {
 export type TokenStatus = {
   has_token: boolean
   masked_token: string | null
+}
+
+async function throwIfNotOk(res: Response, fallback: string): Promise<void> {
+  if (res.ok) return
+  const body = await res.json().catch(() => null)
+  const detail = typeof body?.detail === 'string' ? body.detail : null
+  throw new BackendError(detail ? `${fallback}: ${detail}` : fallback, res.status)
 }
 
 export const setupAPI = {
@@ -312,31 +321,31 @@ export const setupAPI = {
   },
   getSuggestedModels: async (): Promise<SuggestedModel[]> => {
     const res = await fetch(`${API_BASE}/setup/catalog`);
-    if (!res.ok) throw new BackendError('Failed to fetch catalog');
+    await throwIfNotOk(res, 'Failed to fetch catalog');
     return res.json();
   },
 
   refreshCatalog: async (): Promise<{ status: string; count: number }> => {
     const res = await fetch(`${API_BASE}/setup/refresh-catalog`, { method: 'POST' });
-    if (!res.ok) throw new BackendError('Failed to refresh catalog');
+    await throwIfNotOk(res, 'Failed to refresh catalog');
     return res.json();
   },
 
   getDownloadedModels: async (): Promise<any[]> => {
     const res = await fetch(`${API_BASE}/setup/downloaded`);
-    if (!res.ok) throw new BackendError('Failed to fetch downloaded models');
+    await throwIfNotOk(res, 'Failed to fetch downloaded models');
     return res.json();
   },
 
   searchHuggingFace: async (query: string): Promise<HuggingFaceRepo[]> => {
     const res = await fetch(`${API_BASE}/setup/hf-search?q=${encodeURIComponent(query)}`);
-    if (!res.ok) throw new BackendError('Failed to search Hugging Face');
+    await throwIfNotOk(res, 'Failed to search Hugging Face');
     return res.json();
   },
 
   getHuggingFaceFiles: async (repoId: string): Promise<string[]> => {
     const res = await fetch(`${API_BASE}/setup/hf-files?repo_id=${encodeURIComponent(repoId)}`);
-    if (!res.ok) throw new BackendError('Failed to fetch repository files');
+    await throwIfNotOk(res, 'Failed to fetch Hugging Face files');
     return res.json();
   }
 }

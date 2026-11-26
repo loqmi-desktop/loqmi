@@ -14,6 +14,7 @@ import { attachmentsAPI, type ContentBlock } from '@/lib/api'
 // Required CSS for Math rendering. KaTeX does not provide TypeScript declarations
 // for its stylesheet, so suppress the side-effect import type check.
 import 'katex/dist/katex.min.css'
+import { openUrl } from '@tauri-apps/plugin-opener'
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], display: 'swap' })
 
@@ -172,7 +173,8 @@ function PlainText({ text }: { text: string }) {
 }
 
 function ImageBlock({ svg, attachmentId }: { svg: string; attachmentId: string }) {
-  const openFull = () => window.open(attachmentsAPI.fullImageUrl(attachmentId), '_blank')
+  const openFull = () =>
+  openUrl(attachmentsAPI.fullImageUrl(attachmentId)).catch(console.error)
 
   return (
     <button onClick={openFull} className="group relative block rounded-lg overflow-hidden border border-border max-w-xs hover:border-primary/50 transition-colors mt-2" type="button">

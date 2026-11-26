@@ -28,17 +28,19 @@ from __future__ import annotations
 import asyncio
 import base64
 import io
+import logging
 import uuid
 
-import pytesseract
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from PIL import Image
 from pydantic import BaseModel
 
 from config import APP_DATA_DIR
-from core import model_manager
+from core import llm_compat, model_manager, ocr_support
 from rag.ingest import _ocr_image
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/attachments", tags=["attachments"])
 
@@ -72,8 +74,11 @@ async def upload_screenshot(file: UploadFile = File(...)) -> ScreenshotResponse:
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(400, "File must be an image")
 
-    raw_bytes = await file.read()
+    # The models are text-only, so without OCR an attached image would be silently useless.
+    if not ocr_support.available():
+        raise HTTPException(503, ocr_support.INSTALL_HINT)
 
+    raw_bytes = await file.read()
     try:
         image = Image.open(io.BytesIO(raw_bytes))
         image.load()
@@ -82,35 +87,33 @@ async def upload_screenshot(file: UploadFile = File(...)) -> ScreenshotResponse:
 
     attachment_id = uuid.uuid4().hex
 
-    # ── 1. Save the full-resolution original to disk ──────────────────────
     full_path = ATTACHMENTS_DIR / f"{attachment_id}.png"
     image.convert("RGB").save(full_path, format="PNG")
 
-    # ── 2. Generate a small inline thumbnail ───────────────────────────────
     thumb = image.copy()
-    thumb.thumbnail((THUMBNAIL_MAX_WIDTH, THUMBNAIL_MAX_WIDTH * 4))  # cap width, let height flow
+    thumb.thumbnail((THUMBNAIL_MAX_WIDTH, THUMBNAIL_MAX_WIDTH * 4))
     thumb_buffer = io.BytesIO()
     thumb.convert("RGB").save(thumb_buffer, format="WEBP", quality=80)
-    thumb_b64 = base64.b64encode(thumb_buffer.getvalue()).decode("ascii")
-    svg = f"data:image/webp;base64,{thumb_b64}"
+    svg = "data:image/webp;base64," + base64.b64encode(thumb_buffer.getvalue()).decode("ascii")
 
-    # ── 3. OCR — CPU-bound and blocking; off the event loop ────────────────
-    raw_text = (await asyncio.to_thread(_ocr_image, image)).strip()
+    try:
+        raw_text = (await asyncio.to_thread(_ocr_image, image)).strip()
+    except Exception as e:
+        logger.exception("OCR failed")
+        raise HTTPException(500, f"Could not read text from the image: {e}")
 
-    # ── 4. Summarize — sync, before responding (per product decision) ──────
     summary_source = raw_text[:MAX_OCR_CHARS_FOR_SUMMARY]
-    msg = (
-        await _summarize(summary_source)
-        if summary_source
-        else "Screenshot (no readable text detected)"
-    )
+    if not summary_source:
+        msg = "Screenshot (no readable text detected)"
+    else:
+        try:
+            msg = await _summarize(summary_source)
+        except Exception:
+            # The summary is only a memory aid; never fail the upload over it.
+            logger.warning("Screenshot summary failed", exc_info=True)
+            msg = " ".join(summary_source.split())[:160]
 
-    return ScreenshotResponse(
-        attachment_id=attachment_id,
-        msg=msg,
-        svg=svg,
-        raw_text=raw_text,
-    )
+    return ScreenshotResponse(attachment_id=attachment_id, msg=msg, svg=svg, raw_text=raw_text)
 
 
 @router.get("/{attachment_id}")
@@ -141,8 +144,9 @@ async def _summarize(text: str) -> str:
         category = model_manager.current_category() or "document"
         model = model_manager.load(category)
         with model_manager.acquire_for_generation():
-            result = model.create_chat_completion(
-                messages=[
+            result = llm_compat.create_chat_completion(
+                model,
+                [
                     {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
                     {"role": "user", "content": text},
                 ],

@@ -23,7 +23,7 @@ from config import (
     RESEARCH_APPEND_SOURCES,
     RESEARCH_NOTES_IN_CONTEXT_MAX,
 )
-from core import context_budget, memory, model_manager, research, doc_context
+from core import context_budget, memory, model_manager, research, doc_context, llm_compat
 from rag import retrieve_context
 
 logger = logging.getLogger(__name__)
@@ -186,14 +186,6 @@ def _md_safe(text: str) -> str:
     return text.replace("[", "(").replace("]", ")").replace("\n", " ")[:80]
 
 
-def _title_text(persist_content: str) -> str:
-    blocks = memory.parse_content_blocks(persist_content)
-    for block in blocks:
-        if block.get("label") == "text" and block.get("content", "").strip():
-            return block["content"].strip()
-    return "Screenshot"
-
-
 def _typed_text(persist_content: str) -> str:
     """The text the user actually typed (text blocks only, no OCR / file text)."""
     blocks = memory.parse_content_blocks(persist_content)
@@ -205,8 +197,9 @@ def _typed_text(persist_content: str) -> str:
 
 def _stream_plain(model: Llama, messages: list[dict], max_tokens: int):
     with model_manager.acquire_for_generation():
-        stream = model.create_chat_completion(
-            messages=messages,
+        stream = llm_compat.create_chat_completion(
+            model,
+            messages,
             max_tokens=max_tokens,
             temperature=INFERENCE_TEMPERATURE,
             stream=True,

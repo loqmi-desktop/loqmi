@@ -3,9 +3,9 @@
     {
       "id": "qwen3-8b-q4",
       "name": "Qwen 3 8B",
-      "filename": "qwen3-8b-instruct-q4_k_m.gguf",
-      "url": "https://huggingface.co/Bunpot/qwen3-8b-instruct/resolve/main/qwen3-8b-instruct-q4_k_m.gguf",
-      "size_gb": 4.8,
+      "filename": "Qwen3-8B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf",
+      "size_gb": 5.0,
       "n_ctx": 8192,
       "ram_required": "8GB Unified Memory",
       "hardware_target": "M1/M2 Base optimal",
@@ -25,15 +25,15 @@
       "recommended": false
     },
     {
-      "id": "gemma3-9b-q4",
-      "name": "Gemma 3 9B",
-      "filename": "gemma-3-9b-it-Q4_K_M.gguf",
-      "url": "https://huggingface.co/bartowski/gemma-3-9b-it-GGUF/resolve/main/gemma-3-9b-it-Q4_K_M.gguf",
-      "size_gb": 5.4,
+      "id": "gemma2-9b-q4",
+      "name": "Gemma 2 9B",
+      "filename": "gemma-2-9b-it-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/resolve/main/gemma-2-9b-it-Q4_K_M.gguf",
+      "size_gb": 5.8,
       "n_ctx": 8192,
-      "ram_required": "8GB Unified Memory (Tight)",
-      "hardware_target": "M3 Base / 16GB RAM recommended",
-      "description": "Google's open-weights model. Fantastic reasoning, slightly heavier on system resources.",
+      "ram_required": "16GB recommended",
+      "hardware_target": "M1/M2 with 16GB",
+      "description": "Google's open-weights model. Strong reasoning, a bit heavier on memory.",
       "recommended": false
     },
     {
@@ -139,16 +139,40 @@
   ],
   "document": [
     {
-      "id": "qwen3-8b-ctx-q4",
-      "name": "Qwen 3 8B (Long Context)",
-      "filename": "qwen3-8b-instruct-q4_k_m.gguf",
-      "url": "https://huggingface.co/Bunpot/qwen3-8b-instruct/resolve/main/qwen3-8b-instruct-q4_k_m.gguf",
-      "size_gb": 4.8,
+      "id": "qwen3-8b-doc-q4",
+      "name": "Qwen 3 8B (Document)",
+      "filename": "Qwen_Qwen3-8B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Qwen_Qwen3-8B-GGUF/resolve/main/Qwen_Qwen3-8B-Q4_K_M.gguf",
+      "size_gb": 5.03,
       "n_ctx": 32768,
-      "ram_required": "8GB Unified Memory",
-      "hardware_target": "M1/M2 Base optimal",
-      "description": "Configured for a massive context window. Ideal for reading entire PDFs via RAG.",
+      "ram_required": "16GB recommended for 32K ctx (8GB tight)",
+      "hardware_target": "M1/M2 16GB+ for full 32K context",
+      "description": "Qwen 3 8B Q4_K_M GGUF configured with a 32K context window for long documents and RAG.",
       "recommended": true
+    },
+    {
+      "id": "qwen25-7b-doc-q4",
+      "name": "Qwen 2.5 7B Instruct (Document)",
+      "filename": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "size_gb": 4.68,
+      "n_ctx": 32768,
+      "ram_required": "8GB to 16GB Unified Memory",
+      "hardware_target": "Apple Silicon / 8GB+ RAM",
+      "description": "Fast, dependable instruction model for summarization, extraction, and document Q&A.",
+      "recommended": false
+    },
+    {
+      "id": "llama32-3b-doc-q4",
+      "name": "Llama 3.2 3B Instruct (Lightweight)",
+      "filename": "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "url": "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "size_gb": 2.02,
+      "n_ctx": 32768,
+      "ram_required": "4GB to 8GB Unified Memory",
+      "hardware_target": "Low-RAM / Fast Edge",
+      "description": "Compact model for quick document passes and low-memory environments.",
+      "recommended": false
     }
   ],
   "helper": [

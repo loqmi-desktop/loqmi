@@ -4,7 +4,7 @@
 import os
 import sys
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs, copy_metadata
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BACKEND_DIR = Path(SPECPATH)
@@ -43,7 +43,7 @@ binaries += onnx_binaries
 hiddenimports += onnx_hidden
 
 # sentence_transformers + transformers
-for pkg in ["sentence_transformers", "tokenizers", "huggingface_hub"]:
+for pkg in ["sentence_transformers", "tokenizers", "huggingface_hub", "certifi", "requests"]:
     d, b, h = collect_all(pkg)
     datas += d
     binaries += b
@@ -70,6 +70,13 @@ for pkg in ["ddgs", "primp", "lxml", "trafilatura", "courlan", "htmldate", "just
     except Exception:
         continue
     datas += d; binaries += b; hiddenimports += h
+
+for pkg in ["tqdm", "regex", "requests", "packaging", "filelock", "numpy", "pyyaml",
+            "safetensors", "torch", "scikit-learn", "scipy", "pandas", "datasets"]:
+    try:
+        datas += copy_metadata(pkg)
+    except Exception:
+        pass
 
 # ── Explicit dylib binaries (llama_cpp Metal stack) ───────────────────────────
 llama_dylibs = [
@@ -158,13 +165,7 @@ a = Analysis(
         "pytest",
         "test",
         "tests",
-        "transformers",
-        "torch",
         "optimum",  
-        "sklearn",
-        "scipy",
-        "transformers.generation",
-        "pandas",
     ],
     noarchive=False,
 )

@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager, RunEvent};
 #[cfg(target_os = "macos")]
 use tauri::WindowEvent;
+use tauri_plugin_opener::OpenerExt;
 
 const BACKEND_PORT: u16 = 8765;
 
@@ -79,9 +80,62 @@ fn stop_backend(app: &AppHandle) {
     let _ = child.wait();
 }
 
+/// URLs the webview is allowed to navigate to itself.
+fn is_app_url(url: &tauri::Url) -> bool {
+    match url.scheme() {
+        "tauri" | "about" | "blob" | "data" => true,
+        "http" | "https" => {
+            let host = url.host_str().unwrap_or("");
+            host == "tauri.localhost"
+                || (cfg!(debug_assertions) && host == "localhost" && url.port() == Some(3000))
+        }
+        _ => false,
+    }
+}
+
+/// Safety net: the webview can never navigate away from the app.
+/// External links are handed to the system browser / mail client instead.
+fn navigation_guard<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
+    tauri::plugin::Builder::<R>::new("navigation-guard")
+        .on_navigation(|webview, url| {
+            if is_app_url(url) {
+                return true;
+            }
+            if matches!(url.scheme(), "http" | "https" | "mailto" | "tel") {
+                let _ = webview.opener().open_url(url.as_str(), None::<&str>);
+            }
+            false
+        })
+        .build()
+}
+
+/// Leave native full screen first, then hide, so macOS doesn't leave an
+/// empty black Space behind.
+#[cfg(target_os = "macos")]
+fn hide_window(window: &tauri::Window) {
+    if window.is_fullscreen().unwrap_or(false) {
+        let _ = window.set_fullscreen(false);
+        let w = window.clone();
+        std::thread::spawn(move || {
+            let deadline = Instant::now() + Duration::from_secs(3);
+            while w.is_fullscreen().unwrap_or(false) && Instant::now() < deadline {
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            // is_fullscreen() can flip before the exit animation ends
+            std::thread::sleep(Duration::from_millis(800));
+            let _ = w.hide();
+        });
+    } else {
+        let _ = window.hide();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Register the Tauri Opener plugin so external links open in the default browser
+        .plugin(tauri_plugin_opener::init())
+        .plugin(navigation_guard())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Info)
@@ -117,7 +171,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             if let WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
-                let _ = window.hide();
+                hide_window(window);
             }
             #[cfg(not(target_os = "macos"))]
             let _ = (window, event);

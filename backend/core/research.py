@@ -26,7 +26,7 @@ from config import (
     RESEARCH_QUERY_DELAY_S,
     USER_REGION_NAME
 )
-from core import context_budget, web_search
+from core import context_budget, llm_compat, web_search
 
 logger = logging.getLogger(__name__)
 
@@ -96,33 +96,19 @@ def plan_queries(model, lock, prompt: str, previous_answer: str = "") -> tuple[b
     return needs, queries
 
 
-# ── 2-4. Search, fetch, rank, notes ───────────────────────────────────────────
-
-_NOTES_SYSTEM = """You are a research assistant. You get numbered passages from web pages and a question.
-Write concise research notes that answer the question using ONLY the passages.
-- Short bullet points with the key facts, numbers, dates and names.
-- After each fact, add its source number like [2].
-- Copy numbers exactly. State the currency or unit and the date if the passage gives one.
-- If passages disagree, report both with their sources.
-- If the passages do not contain the answer, say exactly what is missing. Never guess or fill in from memory.
-No introduction, no conclusion, no advice. Today's date is {today}."""
-
 
 def run_research(handle, queries: list[str], question: str, method: str,
                  brave_key: str | None, tavily_key: str | None):
     """Yields status events, then {"type": "_research_done", "result": ResearchResult}."""
     per_query: list[list[dict]] = []
     errors: list[str] = []
+    n_urls = 0
 
     for i, q in enumerate(queries):
-        if i and sum(len(g) for g in per_query) >= RESEARCH_ENOUGH_URLS:
-            break                                   # enough URLs already; fewer hits means fewer rate limits
+        if i and n_urls >= RESEARCH_ENOUGH_URLS:
+            break                       # enough URLs already; fewer requests means fewer rate limits
         if i:
             time.sleep(RESEARCH_QUERY_DELAY_S)
-        yield {"type": "status", "message": f"Searching: {q}"}
-    # ... rest of the loop unchanged
-
-    for q in queries:
         yield {"type": "status", "message": f"Searching: {q}"}
         try:
             results = web_search.search(q, method=method, brave_key=brave_key, tavily_key=tavily_key)
@@ -136,6 +122,7 @@ def run_research(handle, queries: list[str], question: str, method: str,
             elif r.get("title") == "Search failed":
                 errors.append(r.get("snippet", ""))
         per_query.append(good)
+        n_urls += len(good)
 
     ordered, seen = [], set()
     for group in zip_longest(*per_query):           # round-robin so every query contributes
@@ -220,8 +207,8 @@ def _done(result: ResearchResult) -> dict:
 
 def _complete(model, lock, messages, max_tokens: int, temperature: float) -> str:
     with lock:
-        out = model.create_chat_completion(
-            messages=messages, max_tokens=max_tokens, temperature=temperature, stream=False)
+        out = llm_compat.create_chat_completion(
+            model, messages, max_tokens=max_tokens, temperature=temperature, stream=False)
     return _THINK_RE.sub("", out["choices"][0]["message"]["content"] or "").strip()
 
 

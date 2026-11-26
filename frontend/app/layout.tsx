@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ConnectionProvider } from '@/lib/connection-context'
 import './globals.css'
+import { ExternalLinkHandler } from '@/components/external-link-handler'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark`}>
       <body className="bg-background text-foreground font-sans antialiased">
         <ConnectionProvider>
+          <ExternalLinkHandler />
           {children}
         </ConnectionProvider>
       </body>
